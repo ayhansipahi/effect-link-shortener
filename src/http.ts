@@ -4,8 +4,7 @@ import type {
   APIGatewayProxyStructuredResultV2,
 } from "aws-lambda"
 import { CreateLinkRequest } from "./domain/schema"
-import { InvalidRequest } from "./domain/errors"
-import type { AppError } from "./domain/errors"
+import { InvalidRequest, type AppError } from "./domain/errors"
 
 export const json = (
   statusCode: number,

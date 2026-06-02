@@ -1,6 +1,6 @@
 import { Clock, Effect } from "effect"
 import type { CreateLinkRequest, LinkRecord, ShortCode } from "../domain/schema"
-import { ShortCodeTaken, StoreUnavailable } from "../domain/errors"
+import { StoreUnavailable } from "../domain/errors"
 import { CodeGen } from "../services/CodeGen"
 import { LinkStore } from "../services/LinkStore"
 
@@ -10,29 +10,26 @@ export const createLink = (request: CreateLinkRequest) =>
     const store = yield* LinkStore
     const now = yield* Clock.currentTimeMillis
     const expiresAt =
-      request.expiresIn !== undefined
-        ? Math.floor(now / 1000) + request.expiresIn
-        : undefined
+      request.expiresIn === undefined ? undefined : Math.floor(now / 1000) + request.expiresIn
 
-    const persist = (shortCode: ShortCode) =>
+    const save = (shortCode: ShortCode) =>
       store.create({ shortCode, url: request.url, createdAt: now, expiresAt, clicks: 0 })
 
     if (request.customCode !== undefined) {
-      // A clash on an explicit code is a real 409 — no retry.
-      return yield* persist(request.customCode)
+      return yield* save(request.customCode)
     }
 
-    // A clash on a generated code just means "try another one".
-    const attempt: Effect.Effect<LinkRecord, ShortCodeTaken | StoreUnavailable, CodeGen | LinkStore> =
-      Effect.gen(function* () {
-        const code = yield* codeGen.generate
-        return yield* persist(code)
-      })
+    const saveWithGeneratedCode = (
+      triesLeft: number,
+    ): Effect.Effect<LinkRecord, StoreUnavailable, CodeGen | LinkStore> =>
+      codeGen.generate.pipe(
+        Effect.flatMap(save),
+        Effect.catchTag("ShortCodeTaken", (collision) =>
+          triesLeft > 1
+            ? saveWithGeneratedCode(triesLeft - 1)
+            : new StoreUnavailable({ cause: collision }),
+        ),
+      )
 
-    return yield* attempt.pipe(
-      // Retry up to 5 times, but STOP retrying if the error is NOT ShortCodeTaken.
-      Effect.retry({ times: 5, until: (e): boolean => e._tag !== "ShortCodeTaken" }),
-      // Exhausted the retries: out of codes, treat as a store problem (500), not 409.
-      Effect.catchTag("ShortCodeTaken", (e) => new StoreUnavailable({ cause: e })),
-    )
+    return yield* saveWithGeneratedCode(5)
   })
