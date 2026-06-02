@@ -3,3 +3,6 @@ node_modules/
 sst-env.d.ts
 dist/
 .DS_Store
+
+# Internal planning artifacts (kept locally, not published)
+docs/superpowers/
