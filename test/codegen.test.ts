@@ -1,13 +1,12 @@
-import { expect, test } from "vitest"
+import { it } from "@effect/vitest"
+import { expect } from "vitest"
 import { Effect } from "effect"
 import { CodeGen } from "../src/services/CodeGen"
 
-test("CodeGen.generate returns a valid short code", async () => {
-  const code = await Effect.runPromise(
-    Effect.gen(function* () {
-      const gen = yield* CodeGen
-      return yield* gen.generate
-    }).pipe(Effect.provide(CodeGen.Default)),
-  )
-  expect(code).toMatch(/^[0-9A-Za-z_-]{4,32}$/)
-})
+it.effect("CodeGen.generate returns a valid short code", () =>
+  Effect.gen(function* () {
+    const gen = yield* CodeGen
+    const code = yield* gen.generate
+    expect(code).toMatch(/^[0-9A-Za-z_-]{4,32}$/)
+  }).pipe(Effect.provide(CodeGen.Default)),
+)

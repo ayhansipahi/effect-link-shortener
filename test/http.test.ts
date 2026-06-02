@@ -1,3 +1,4 @@
+import { it } from "@effect/vitest"
 import { describe, expect, test } from "vitest"
 import { Effect, Exit } from "effect"
 import { decodeBody, json, redirect } from "../src/http"
@@ -28,18 +29,24 @@ describe("http helpers", () => {
     expect("expiresAt" in out).toBe(false)
   })
 
-  test("decodeBody parses a valid body", async () => {
-    const r = await Effect.runPromise(decodeBody(event(JSON.stringify({ url: "https://x.com" }))))
-    expect(r.url).toBe("https://x.com")
-  })
+  it.effect("decodeBody parses a valid body", () =>
+    Effect.gen(function* () {
+      const r = yield* decodeBody(event(JSON.stringify({ url: "https://x.com" })))
+      expect(r.url).toBe("https://x.com")
+    }),
+  )
 
-  test("decodeBody fails InvalidRequest on bad JSON", async () => {
-    const exit = await Effect.runPromiseExit(decodeBody(event("{not json")))
-    expect(Exit.isFailure(exit)).toBe(true)
-  })
+  it.effect("decodeBody fails InvalidRequest on bad JSON", () =>
+    Effect.gen(function* () {
+      const exit = yield* decodeBody(event("{not json")).pipe(Effect.exit)
+      expect(Exit.isFailure(exit)).toBe(true)
+    }),
+  )
 
-  test("decodeBody fails InvalidRequest on a bad url", async () => {
-    const exit = await Effect.runPromiseExit(decodeBody(event(JSON.stringify({ url: "nope" }))))
-    expect(Exit.isFailure(exit)).toBe(true)
-  })
+  it.effect("decodeBody fails InvalidRequest on a bad url", () =>
+    Effect.gen(function* () {
+      const exit = yield* decodeBody(event(JSON.stringify({ url: "nope" }))).pipe(Effect.exit)
+      expect(Exit.isFailure(exit)).toBe(true)
+    }),
+  )
 })
