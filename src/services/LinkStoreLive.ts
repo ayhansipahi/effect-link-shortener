@@ -1,4 +1,4 @@
-import { Effect, Layer, Option, Schema } from "effect"
+import { Effect, Layer, Schema } from "effect"
 import { DynamoDBDocument } from "@effect-aws/dynamodb"
 import { Resource } from "sst"
 import { LinkRecord, type ShortCode } from "../domain/schema"
