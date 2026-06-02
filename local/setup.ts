@@ -3,6 +3,7 @@ import {
   CreateTableCommand,
   UpdateTimeToLiveCommand,
   DescribeTableCommand,
+  ListTablesCommand,
 } from "@aws-sdk/client-dynamodb"
 
 const endpoint = process.env.DYNAMODB_ENDPOINT ?? "http://localhost:8000"
@@ -13,7 +14,30 @@ const client = new DynamoDBClient({
   credentials: { accessKeyId: "local", secretAccessKey: "local" },
 })
 
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+// `docker compose up -d` returns before DynamoDB Local's server is actually
+// accepting requests (its port is forwarded before the Java app is ready), so
+// poll until it responds before doing anything else.
+async function waitForReady(timeoutMs = 30000) {
+  const deadline = Date.now() + timeoutMs
+  let lastError: unknown
+  while (Date.now() < deadline) {
+    try {
+      await client.send(new ListTablesCommand({}))
+      return
+    } catch (error) {
+      lastError = error
+      await sleep(500)
+    }
+  }
+  throw lastError
+}
+
 async function main() {
+  console.warn(`waiting for DynamoDB Local at ${endpoint} ...`)
+  await waitForReady()
+
   try {
     await client.send(
       new CreateTableCommand({
@@ -29,7 +53,9 @@ async function main() {
     if (err?.name === "ResourceInUseException") console.warn(`table ${TableName} already exists`)
     else throw e
   }
+
   await client.send(new DescribeTableCommand({ TableName }))
+
   try {
     await client.send(
       new UpdateTimeToLiveCommand({
