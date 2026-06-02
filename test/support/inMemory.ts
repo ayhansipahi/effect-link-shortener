@@ -45,5 +45,5 @@ export const QueueCodeGen = (codes: ReadonlyArray<string>) => {
   let i = 0
   return Layer.succeed(CodeGen, {
     generate: Effect.sync(() => ShortCodeSchema.make(codes[i++ % codes.length])),
-  })
+  } as InstanceType<typeof CodeGen>)
 }

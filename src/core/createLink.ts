@@ -1,14 +1,10 @@
 import { Clock, Effect } from "effect"
 import type { CreateLinkRequest, LinkRecord, ShortCode } from "../domain/schema"
-import { StoreUnavailable } from "../domain/errors"
+import { ShortCodeTaken, StoreUnavailable } from "../domain/errors"
 import { CodeGen } from "../services/CodeGen"
 import { LinkStore } from "../services/LinkStore"
 
-export const createLink = (request: CreateLinkRequest): Effect.Effect<
-  LinkRecord,
-  StoreUnavailable | import("../domain/errors").ShortCodeTaken,
-  CodeGen | LinkStore
-> =>
+export const createLink = (request: CreateLinkRequest) =>
   Effect.gen(function* () {
     const codeGen = yield* CodeGen
     const store = yield* LinkStore
@@ -27,14 +23,15 @@ export const createLink = (request: CreateLinkRequest): Effect.Effect<
     }
 
     // A clash on a generated code just means "try another one".
-    const attempt = Effect.gen(function* () {
-      const code = yield* codeGen.generate
-      return yield* persist(code)
-    })
+    const attempt: Effect.Effect<LinkRecord, ShortCodeTaken | StoreUnavailable, CodeGen | LinkStore> =
+      Effect.gen(function* () {
+        const code = yield* codeGen.generate
+        return yield* persist(code)
+      })
 
     return yield* attempt.pipe(
       // Retry up to 5 times, but STOP retrying if the error is NOT ShortCodeTaken.
-      Effect.retry({ times: 5, until: (e) => e._tag !== "ShortCodeTaken" }),
+      Effect.retry({ times: 5, until: (e): boolean => e._tag !== "ShortCodeTaken" }),
       // Exhausted the retries: out of codes, treat as a store problem (500), not 409.
       Effect.catchTag("ShortCodeTaken", (e) => new StoreUnavailable({ cause: e })),
     )

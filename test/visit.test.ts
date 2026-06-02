@@ -4,7 +4,7 @@ import { ShortCode } from "../src/domain/schema"
 import { visit } from "../src/core/visit"
 import { InMemoryLinkStore } from "./support/inMemory"
 
-const seed = [{ shortCode: "abc123", url: "https://x.com", createdAt: 1, clicks: 0 }]
+const seed: any[] = [{ shortCode: "abc123", url: "https://x.com", createdAt: 1, clicks: 0 }]
 
 describe("visit", () => {
   test("returns the url and the incremented click count", async () => {
