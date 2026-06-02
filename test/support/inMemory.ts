@@ -27,16 +27,16 @@ export const InMemoryLinkStore = (
             ? Effect.succeed(found)
             : Effect.fail(new ShortCodeNotFound({ shortCode }))
         },
-        incrementClicks: (shortCode: ShortCode) =>
-          opts.failIncrement
-            ? Effect.fail(new StoreUnavailable({ cause: "forced" }))
-            : Effect.sync(() => {
-                const found = map.get(shortCode)
-                if (!found) return 0
-                const next = (found.clicks ?? 0) + 1
-                map.set(shortCode, { ...found, clicks: next })
-                return next
-              }),
+        incrementClicks: (shortCode: ShortCode) => {
+          if (opts.failIncrement) return Effect.fail(new StoreUnavailable({ cause: "forced" }))
+          const found = map.get(shortCode)
+          if (!found) return Effect.fail(new StoreUnavailable({ cause: `unknown shortCode: ${shortCode}` }))
+          return Effect.sync(() => {
+            const next = (found.clicks ?? 0) + 1
+            map.set(shortCode, { ...found, clicks: next })
+            return next
+          })
+        },
       }
     })(),
   })

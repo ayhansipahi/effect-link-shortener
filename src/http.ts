@@ -1,8 +1,5 @@
 import { Effect, ParseResult, Schema } from "effect"
-import type {
-  APIGatewayProxyEventV2,
-  APIGatewayProxyStructuredResultV2,
-} from "aws-lambda"
+import type { APIGatewayProxyStructuredResultV2 } from "aws-lambda"
 import { CreateLinkRequest } from "./domain/schema"
 import { InvalidRequest, type AppError } from "./domain/errors"
 
@@ -41,9 +38,9 @@ export const withErrorMapping = <R>(
     Effect.catchAllDefect(() => Effect.succeed(json(500, { error: "InternalError" }))),
   )
 
-export const decodeBody = (event: APIGatewayProxyEventV2) =>
+export const decodeBody = (body: string | null | undefined) =>
   Effect.try({
-    try: () => (event.body ? JSON.parse(event.body) : {}),
+    try: () => (body ? JSON.parse(body) : {}),
     catch: () => new InvalidRequest({ issues: "request body is not valid JSON" }),
   }).pipe(
     Effect.flatMap((raw) => Schema.decodeUnknown(CreateLinkRequest)(raw)),

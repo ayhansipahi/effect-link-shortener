@@ -8,7 +8,6 @@ import { LinkStoreLive } from "./services/LinkStoreLive"
 
 const MainLayer = Layer.mergeAll(CodeGen.Default, LinkStoreLive)
 
-// Built once per cold start, reused across warm invocations.
 export const runtime = ManagedRuntime.make(MainLayer)
 
 export const runHandler = (

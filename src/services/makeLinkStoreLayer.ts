@@ -52,6 +52,7 @@ export const makeLinkStoreLayer = (
           .update({
             TableName: tableName,
             Key: { shortCode },
+            ConditionExpression: "attribute_exists(shortCode)",
             UpdateExpression: "ADD clicks :one",
             ExpressionAttributeValues: { ":one": 1 },
             ReturnValues: "UPDATED_NEW",

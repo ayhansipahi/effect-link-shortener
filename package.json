@@ -8,7 +8,7 @@
     "deploy": "sst deploy",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc -p tsconfig.typecheck.json",
     "local:db": "docker compose up -d",
     "local:db:down": "docker compose down",
     "local:setup": "tsx local/setup.ts",

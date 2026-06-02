@@ -4,8 +4,6 @@ import { Effect, Exit } from "effect"
 import { decodeBody, json, redirect } from "../src/http"
 import { presentCreated } from "../src/domain/present"
 
-const event = (body: string | null) => ({ body }) as any
-
 describe("http helpers", () => {
   test("json sets status, content-type and stringified body", () => {
     const r = json(201, { ok: true })
@@ -31,21 +29,21 @@ describe("http helpers", () => {
 
   it.effect("decodeBody parses a valid body", () =>
     Effect.gen(function* () {
-      const r = yield* decodeBody(event(JSON.stringify({ url: "https://x.com" })))
+      const r = yield* decodeBody(JSON.stringify({ url: "https://x.com" }))
       expect(r.url).toBe("https://x.com")
     }),
   )
 
   it.effect("decodeBody fails InvalidRequest on bad JSON", () =>
     Effect.gen(function* () {
-      const exit = yield* decodeBody(event("{not json")).pipe(Effect.exit)
+      const exit = yield* decodeBody("{not json").pipe(Effect.exit)
       expect(Exit.isFailure(exit)).toBe(true)
     }),
   )
 
   it.effect("decodeBody fails InvalidRequest on a bad url", () =>
     Effect.gen(function* () {
-      const exit = yield* decodeBody(event(JSON.stringify({ url: "nope" }))).pipe(Effect.exit)
+      const exit = yield* decodeBody(JSON.stringify({ url: "nope" })).pipe(Effect.exit)
       expect(Exit.isFailure(exit)).toBe(true)
     }),
   )

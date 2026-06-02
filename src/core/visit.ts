@@ -7,9 +7,6 @@ export const visit = (shortCode: ShortCode) =>
   Effect.gen(function* () {
     const store = yield* LinkStore
     const link = yield* resolveLink(shortCode)
-    // The counter must never break the redirect: swallow store failures to `undefined`.
-    const clicks = yield* store.incrementClicks(shortCode).pipe(
-      Effect.catchAll(() => Effect.succeed(undefined)),
-    )
+    const clicks = yield* store.incrementClicks(shortCode).pipe(Effect.orElseSucceed(() => undefined))
     return { url: link.url, clicks }
   })
