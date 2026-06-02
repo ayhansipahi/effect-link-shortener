@@ -5,6 +5,7 @@ import type {
 } from "aws-lambda"
 import { CreateLinkRequest } from "./domain/schema"
 import { InvalidRequest } from "./domain/errors"
+import type { AppError } from "./domain/errors"
 
 export const json = (
   statusCode: number,
@@ -26,6 +27,20 @@ export const redirect = (
     ...(clicks !== undefined ? { "X-Click-Count": String(clicks) } : {}),
   },
 })
+
+export const withErrorMapping = <R>(
+  program: Effect.Effect<APIGatewayProxyStructuredResultV2, AppError, R>,
+): Effect.Effect<APIGatewayProxyStructuredResultV2, never, R> =>
+  program.pipe(
+    Effect.catchTags({
+      InvalidRequest: (e) => Effect.succeed(json(400, { error: "InvalidRequest", issues: e.issues })),
+      ShortCodeTaken: (e) => Effect.succeed(json(409, { error: "ShortCodeTaken", shortCode: e.shortCode })),
+      ShortCodeNotFound: () => Effect.succeed(json(404, { error: "ShortCodeNotFound" })),
+      LinkExpired: () => Effect.succeed(json(410, { error: "LinkExpired" })),
+      StoreUnavailable: () => Effect.succeed(json(500, { error: "InternalError" })),
+    }),
+    Effect.catchAllDefect(() => Effect.succeed(json(500, { error: "InternalError" }))),
+  )
 
 export const decodeBody = (event: APIGatewayProxyEventV2) =>
   Effect.try({
