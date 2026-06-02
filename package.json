@@ -1,0 +1,26 @@
+{
+  "name": "effect-link-shortener",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "sst dev",
+    "deploy": "sst deploy",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@effect-aws/dynamodb": "^1.1.0",
+    "effect": "^3.21.2",
+    "nanoid": "^5.1.11",
+    "sst": "^4.15.2"
+  },
+  "devDependencies": {
+    "@effect/vitest": "^0.29.0",
+    "@types/aws-lambda": "^8.10.161",
+    "@types/node": "^25.9.1",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.8"
+  }
+}
