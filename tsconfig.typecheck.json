@@ -1,4 +1,4 @@
 {
   "extends": "./tsconfig.json",
-  "include": ["src", "test", "sst-env.d.ts"]
+  "include": ["src", "test", "local", "sst-env.d.ts"]
 }

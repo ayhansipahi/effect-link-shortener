@@ -8,7 +8,11 @@
     "deploy": "sst deploy",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "local:db": "docker compose up -d",
+    "local:db:down": "docker compose down",
+    "local:setup": "tsx local/setup.ts",
+    "local": "tsx local/server.ts"
   },
   "dependencies": {
     "@effect-aws/dynamodb": "^1.1.0",
@@ -20,6 +24,7 @@
     "@effect/vitest": "^0.29.0",
     "@types/aws-lambda": "^8.10.161",
     "@types/node": "^25.9.1",
+    "tsx": "^4.22.4",
     "typescript": "^6.0.3",
     "vitest": "^4.1.8"
   }
